@@ -2,7 +2,7 @@ import Foundation
 
 struct Festival: Codable, Identifiable, Hashable {
     let festivalId: Int
-    let universityName: String
+    let organizationName: String
     let festivalName: String
     let startDate: String
     let endDate: String
@@ -43,7 +43,7 @@ struct FestivalImage: Codable, Identifiable {
 // 축제 상세 정보 모델
 struct FestivalDetail: Codable, Identifiable {
     let festivalId: Int
-    let universityName: String
+    let organizationName: String
     let festivalImages: [FestivalImage]
     let festivalName: String
     let startDate: String

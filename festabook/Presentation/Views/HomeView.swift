@@ -24,8 +24,8 @@ struct HomeView: View {
                 VStack(spacing: 0) {
                     // 상단 대학교 이름 + 변경 버튼 - 일정/소식 화면과 동일한 스타일
                     HStack(spacing: 8) {
-                        if let universityName = festivalDetail?.universityName {
-                            Text(universityName)
+                        if let organizationName = festivalDetail?.organizationName {
+                            Text(organizationName)
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.primary)
                                 .contentShape(Rectangle())
@@ -35,7 +35,7 @@ struct HomeView: View {
                         } else if isLoading {
                             UniversityNamePlaceholder()
                         } else {
-                            Text(appState.selectedFestival?.universityName ?? 
+                            Text(appState.selectedFestival?.organizationName ?? 
                                  appState.selectedUniversity?.name ?? 
                                  "페스타북대학교")
                                 .font(.system(size: 24, weight: .bold))
@@ -219,19 +219,18 @@ struct HomeView: View {
 
             if let festival = festivalDetail {
                 await notificationService.synchronizeSubscriptionsWithServer(
-                    focusFestivalId: festival.festivalId,
-                    focusUniversityName: festival.universityName
+                    focusFestivalId: festival.festivalId
                 )
             } else {
-                await notificationService.synchronizeSubscriptionsWithServer(focusFestivalId: nil, focusUniversityName: nil)
+                await notificationService.synchronizeSubscriptionsWithServer(focusFestivalId: nil)
             }
 
             // Update university name in AppState for use in other screens
-            if let universityName = festivalDetail?.universityName {
-                appState.updateUniversityName(universityName)
+            if let organizationName = festivalDetail?.organizationName {
+                appState.updateUniversityName(organizationName)
             }
 
-            print("[HomeView] Successfully loaded festival detail: \(festivalDetail?.universityName ?? "nil")")
+            print("[HomeView] Successfully loaded festival detail: \(festivalDetail?.organizationName ?? "nil")")
             print("[HomeView] Festival images: \(festivalDetail?.festivalImages.map { $0.imageUrl } ?? [])")
             print("[HomeView] Successfully loaded lineups count: \(lineups.count)")
             print("[HomeView] Lineup image URLs: \(lineups.map { $0.imageUrl })")
@@ -244,7 +243,7 @@ struct HomeView: View {
             lineups = []
             // 에러 시 기본값으로 설정
             appState.updateUniversityName("페스타북대학교")
-            await notificationService.synchronizeSubscriptionsWithServer(focusFestivalId: nil, focusUniversityName: nil)
+            await notificationService.synchronizeSubscriptionsWithServer(focusFestivalId: nil)
             lastLoadedFestivalId = nil
         }
 
@@ -374,10 +373,8 @@ struct HomeView: View {
         // 3. 축제 알림 구독
         print("[HomeView] 🎪 축제 알림 구독 시작")
         do {
-            let universityName = festivalDetail?.universityName
             let _ = try await notificationService.subscribeToFestivalNotifications(
-                festivalId: festivalId,
-                universityName: universityName
+                festivalId: festivalId
             )
             print("[APIClient] ✅ 축제 알림 구독 성공")
 

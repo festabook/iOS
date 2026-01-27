@@ -44,8 +44,7 @@ final class AppState: ObservableObject {
 
         Task {
             await NotificationService.shared.synchronizeSubscriptionsWithServer(
-                focusFestivalId: festivalId,
-                focusUniversityName: nil
+                focusFestivalId: festivalId
             )
         }
     }
@@ -69,8 +68,7 @@ final class AppState: ObservableObject {
 
         Task {
             await NotificationService.shared.synchronizeSubscriptionsWithServer(
-                focusFestivalId: nil,
-                focusUniversityName: nil
+                focusFestivalId: nil
             )
         }
     }
@@ -125,7 +123,7 @@ final class AppState: ObservableObject {
         }
 
         do {
-            let festivals = try await ServiceLocator.shared.festivalRepo.getFestivalsByUniversity(universityName: "")
+            let festivals = try await ServiceLocator.shared.festivalRepo.searchFestivals(keyword: "")
             await MainActor.run { [weak self] in
                 self?.initialFestivalList = festivals
             }
@@ -147,7 +145,7 @@ final class AppState: ObservableObject {
 
                 let restoredFestival = Festival(
                     festivalId: detail.festivalId,
-                    universityName: detail.universityName,
+                    organizationName: detail.organizationName,
                     festivalName: detail.festivalName,
                     startDate: detail.startDate,
                     endDate: detail.endDate
@@ -156,12 +154,12 @@ final class AppState: ObservableObject {
                 self.selectedFestival = restoredFestival
                 self.selectedUniversity = University(
                     id: detail.festivalId,
-                    name: detail.universityName,
+                    name: detail.organizationName,
                     latitude: nil,
                     longitude: nil
                 )
-                self.currentUniversityName = detail.universityName
-                UserDefaults.standard.set(detail.universityName, forKey: UserDefaultsKey.currentUniversityName)
+                self.currentUniversityName = detail.organizationName
+                UserDefaults.standard.set(detail.organizationName, forKey: UserDefaultsKey.currentUniversityName)
             }
         } catch {
             print("[AppState] ⚠️ Failed to hydrate festival selection: \(error)")
@@ -227,7 +225,7 @@ final class AppState: ObservableObject {
                 await MainActor.run {
                     let festival = Festival(
                         festivalId: detail.festivalId,
-                        universityName: detail.universityName,
+                        organizationName: detail.organizationName,
                         festivalName: detail.festivalName,
                         startDate: detail.startDate,
                         endDate: detail.endDate
@@ -236,11 +234,11 @@ final class AppState: ObservableObject {
                     selectedFestival = festival
                     selectedUniversity = University(
                         id: detail.festivalId,
-                        name: detail.universityName,
+                        name: detail.organizationName,
                         latitude: nil,
                         longitude: nil
                     )
-                    currentUniversityName = detail.universityName
+                    currentUniversityName = detail.organizationName
                 }
             } catch {
                 print("[AppState] ❌ 축제 상세 로드 실패: \(error)")

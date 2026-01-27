@@ -1,7 +1,7 @@
 import Foundation
 
 protocol FestivalRepository {
-    func getFestivalsByUniversity(universityName: String) async throws -> [Festival]
+    func searchFestivals(keyword: String) async throws -> [Festival]
     func getFestivalDetail() async throws -> FestivalDetail
     func getLineups() async throws -> [Lineup]
 }
@@ -9,9 +9,9 @@ protocol FestivalRepository {
 struct FestivalRepositoryLive: FestivalRepository {
     let api: APIClient
     
-    func getFestivalsByUniversity(universityName: String) async throws -> [Festival] {
-        let queryItems = [URLQueryItem(name: "universityName", value: universityName)]
-        return try await api.get(Endpoints.Festivals.universities, query: queryItems, requiresFestivalId: false)
+    func searchFestivals(keyword: String) async throws -> [Festival] {
+        let queryItems = [URLQueryItem(name: "keyword", value: keyword)]
+        return try await api.get(Endpoints.Festivals.search, query: queryItems, requiresFestivalId: false)
     }
     
     func getFestivalDetail() async throws -> FestivalDetail {

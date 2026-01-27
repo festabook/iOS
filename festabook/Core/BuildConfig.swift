@@ -9,7 +9,7 @@ enum BuildConfig {
         let urlString = string(for: "API_BASE_URL")
         guard !urlString.isEmpty else {
             // 폴백 URL 사용
-            return URL(string: defaultBaseURL + "/api")!
+            return URL(string: defaultBaseURL)!
         }
         return URL(string: urlString)!
     }

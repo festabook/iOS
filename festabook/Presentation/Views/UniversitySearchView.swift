@@ -78,7 +78,7 @@ struct UniversitySearchView: View {
                                         HStack {
                                             VStack(alignment: .leading, spacing: 4) {
                                                 // 대학교 이름 - 메인 텍스트
-                                                Text(festival.universityName)
+                                                Text(festival.organizationName)
                                                     .font(.system(size: 16, weight: .medium))
                                                     .foregroundColor(.black)
 
@@ -147,7 +147,7 @@ struct UniversitySearchView: View {
             }
             .task {
                 if appState.initialFestivalList.isEmpty {
-                    await loadFestivals(universityName: "")
+                    await loadFestivals(keyword: "")
                 } else {
                     festivals = appState.initialFestivalList
                     isLoading = false
@@ -179,20 +179,20 @@ struct UniversitySearchView: View {
             try? await Task.sleep(nanoseconds: 300_000_000) // 0.3초
             
             if !Task.isCancelled {
-                await loadFestivals(universityName: searchText)
+                await loadFestivals(keyword: searchText)
             }
         }
     }
     
     // 축제 목록 로드 (검색어 포함)
     @MainActor
-    private func loadFestivals(universityName: String) async {
+    private func loadFestivals(keyword: String) async {
         isLoading = true
         
         do {
             // 검색어에 따라 API 호출
-            festivals = try await locator.festivalRepo.getFestivalsByUniversity(universityName: universityName)
-            if universityName.isEmpty {
+            festivals = try await locator.festivalRepo.searchFestivals(keyword: keyword)
+            if keyword.isEmpty {
                 appState.initialFestivalList = festivals
             }
         } catch {
@@ -211,7 +211,7 @@ struct UniversitySearchView: View {
             return
         }
 
-        print("[UniversitySearchView] 선택된 축제: \(festival.universityName) - ID: \(festival.festivalId)")
+        print("[UniversitySearchView] 선택된 축제: \(festival.organizationName) - ID: \(festival.festivalId)")
 
         isProcessingSelection = true
 
@@ -266,7 +266,7 @@ struct UniversitySearchView: View {
         print("[UniversitySearchView] APIClient 축제 ID: \(locator.api.currentFestivalId)")
 
         // 대학 정보를 University 객체로 변환하여 설정
-        let university = University(id: festival.festivalId, name: festival.universityName, latitude: nil, longitude: nil)
+        let university = University(id: festival.festivalId, name: festival.organizationName, latitude: nil, longitude: nil)
         appState.selectUniversity(university)
 
         // 축제 정보도 설정

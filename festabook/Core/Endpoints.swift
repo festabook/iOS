@@ -2,7 +2,7 @@ import Foundation
 
 enum Endpoints {
     enum Festivals {
-        static let universities = "/festivals/universities"
+        static let search = "/festivals/search"
         static let detail = "/festivals"
         static let lineups = "/lineups"
         static let geography = "/festivals/geography"
