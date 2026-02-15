@@ -161,7 +161,7 @@ struct SettingsView: View {
             Task {
                 await notificationService.synchronizeSubscriptionsWithServer(
                     focusFestivalId: appState.currentFestivalId,
-                    focusUniversityName: appState.currentUniversityName
+                    focusOrganizationName: appState.currentUniversityName
                 )
             }
         }
@@ -173,7 +173,7 @@ struct SettingsView: View {
             Task {
                 await notificationService.synchronizeSubscriptionsWithServer(
                     focusFestivalId: newValue,
-                    focusUniversityName: appState.currentUniversityName
+                    focusOrganizationName: appState.currentUniversityName
                 )
             }
         }
@@ -234,7 +234,7 @@ struct SettingsView: View {
                     // 구독 - festival 헤더 제거된 API 호출
                     _ = try await notificationService.subscribeToFestivalNotifications(
                         festivalId: festivalId,
-                        universityName: appState.currentUniversityName
+                        organizationName: appState.currentUniversityName
                     )
                 } else {
                     // 구독 취소 - festival 헤더 제거된 API 호출

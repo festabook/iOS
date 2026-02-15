@@ -139,12 +139,14 @@ struct PlaceDetailView: View {
                     .tag(0)
             } else {
                 ForEach(Array(imageUrls.enumerated()), id: \.offset) { index, url in
-                    AsyncImage(url: URL(string: url)) { image in
+                    CachedAsyncImage(url: url) { image in
                         image
                             .resizable()
                             .scaledToFill()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } placeholder: {
+                        placeholderImage()
+                    } errorView: {
                         placeholderImage()
                     }
                     .tag(index)
@@ -771,6 +773,7 @@ private struct ZoomableAsyncImage: View {
     @State private var intrinsicImageSize: CGSize?
     @State private var hasRequestedIntrinsicSize = false
     @State private var containerSize: CGSize = .zero
+    @StateObject private var loader = ImageLoader()
 
     private let maxScale: CGFloat = 4
 
@@ -779,34 +782,25 @@ private struct ZoomableAsyncImage: View {
             let size = proxy.size
             ZStack {
                 if let url {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        case .success(let image):
-                            let renderedImage = image
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: proxy.size.width, height: proxy.size.height)
-                                .scaleEffect(scale)
-                                .offset(offset)
+                    if let loadedImage = loader.image {
+                        let renderedImage = Image(uiImage: loadedImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .scaleEffect(scale)
+                            .offset(offset)
 
-                            renderedImage
-                                .simultaneousGesture(zoomGesture)
-                                .simultaneousGesture(panGesture)
-                                .onAppear {
-                                    updateIntrinsicSizeIfNeeded(from: image, fallbackURL: url)
-                                }
-                        case .failure:
-                            placeholder
-                        @unknown default:
-                            placeholder
-                        }
-                    }
-                    .onAppear {
-                        resetPosition()
-                        onZoomChange(false)
+                        renderedImage
+                            .simultaneousGesture(zoomGesture)
+                            .simultaneousGesture(panGesture)
+                            .onAppear {
+                                updateIntrinsicSizeIfNeeded(from: loadedImage, fallbackURL: url)
+                            }
+                    } else if loader.isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        placeholder
                     }
                 } else {
                     placeholder
@@ -814,6 +808,12 @@ private struct ZoomableAsyncImage: View {
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
             .onAppear {
+                if let url {
+                    loader.load(from: url)
+                }
+                resetPosition()
+                onZoomChange(false)
+
                 if containerSize != size {
                     containerSize = size
                 }
@@ -828,6 +828,9 @@ private struct ZoomableAsyncImage: View {
             resetPosition(animated: false)
             intrinsicImageSize = nil
             hasRequestedIntrinsicSize = false
+            if let url {
+                loader.load(from: url)
+            }
         }
     }
 
@@ -910,24 +913,18 @@ private struct ZoomableAsyncImage: View {
         }
     }
 
-    private func updateIntrinsicSizeIfNeeded(from image: Image, fallbackURL: URL?) {
+    private func updateIntrinsicSizeIfNeeded(from image: UIImage, fallbackURL: URL?) {
         guard !hasRequestedIntrinsicSize, intrinsicImageSize == nil else { return }
 
-#if canImport(UIKit)
-        if let uiImage = image.asUIImage {
-            hasRequestedIntrinsicSize = true
-            intrinsicImageSize = uiImage.size
-            return
-        }
-#endif
+        hasRequestedIntrinsicSize = true
+        intrinsicImageSize = image.size
 
         guard let url = fallbackURL else { return }
-        hasRequestedIntrinsicSize = true
 
         Task.detached(priority: .utility) {
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
-                if let uiImage = UIImage(data: data) {
+                if let uiImage = ImageLoader.decodeImage(from: data) {
                     await MainActor.run {
                         intrinsicImageSize = uiImage.size
                     }

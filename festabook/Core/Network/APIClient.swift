@@ -73,6 +73,8 @@ class APIClient {
             guard currentFestivalId > 0 else {
                 throw HTTPError.transport(NSError(domain: "APIClient", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid festivalId: \(currentFestivalId)"]))
             }
+            req.setValue("\(currentFestivalId)", forHTTPHeaderField: "festivalId")
+            // 서버 롤아웃 과도기 호환: legacy festival 헤더도 함께 전송
             req.setValue("\(currentFestivalId)", forHTTPHeaderField: "festival")
         }
 
@@ -120,6 +122,8 @@ class APIClient {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.setValue("\(currentFestivalId)", forHTTPHeaderField: "festivalId")
+        // 서버 롤아웃 과도기 호환: legacy festival 헤더도 함께 전송
         req.setValue("\(currentFestivalId)", forHTTPHeaderField: "festival")
         
         do {
@@ -163,6 +167,8 @@ class APIClient {
         var req = URLRequest(url: url)
         req.httpMethod = "DELETE"
         req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.setValue("\(currentFestivalId)", forHTTPHeaderField: "festivalId")
+        // 서버 롤아웃 과도기 호환: legacy festival 헤더도 함께 전송
         req.setValue("\(currentFestivalId)", forHTTPHeaderField: "festival")
         
         print("[APIClient] DELETE Request URL: \(url)")

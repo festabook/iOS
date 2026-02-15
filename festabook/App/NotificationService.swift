@@ -37,7 +37,7 @@ class NotificationService: ObservableObject {
     private init() {
         loadStoredValues()
         Task { [weak self] in
-            await self?.synchronizeSubscriptionsWithServer(focusFestivalId: nil, focusUniversityName: nil)
+            await self?.synchronizeSubscriptionsWithServer(focusFestivalId: nil, focusOrganizationName: nil)
         }
     }
     
@@ -99,7 +99,7 @@ class NotificationService: ObservableObject {
         isNotificationEnabled = festivalNotificationIds[festivalId] != nil
     }
 
-    func synchronizeSubscriptionsWithServer(focusFestivalId: Int?, focusUniversityName: String? = nil) async {
+    func synchronizeSubscriptionsWithServer(focusFestivalId: Int?, focusOrganizationName: String? = nil) async {
         let currentDeviceId = await MainActor.run { self.deviceId }
 
         guard let deviceId = currentDeviceId, deviceId > 0 else {
@@ -119,8 +119,8 @@ class NotificationService: ObservableObject {
                 var updated: [Int: Int] = [:]
 
                 if let focusFestivalId,
-                   let focusUniversityName,
-                   let matched = subscriptions.first(where: { $0.universityName == focusUniversityName }) {
+                   let focusOrganizationName,
+                   let matched = subscriptions.first(where: { $0.organizationName == focusOrganizationName }) {
                     updated[focusFestivalId] = matched.festivalNotificationId
                 }
 
@@ -338,7 +338,7 @@ class NotificationService: ObservableObject {
     }
     
     // MARK: - 축제 알림 구독
-    func subscribeToFestivalNotifications(festivalId: Int, universityName: String? = nil) async throws -> Int {
+    func subscribeToFestivalNotifications(festivalId: Int, organizationName: String? = nil) async throws -> Int {
         if let existing = festivalNotificationIds[festivalId] {
             print("[NotificationService] ✅ 이미 구독된 축제 - API 호출 스킵")
             return existing
@@ -387,7 +387,7 @@ class NotificationService: ObservableObject {
 
                 await synchronizeSubscriptionsWithServer(
                     focusFestivalId: festivalId,
-                    focusUniversityName: universityName
+                    focusOrganizationName: organizationName
                 )
                 if let syncedId = await MainActor.run { festivalNotificationIds[festivalId] } {
                     print("[NotificationService] ⚠️ 서버 구독 상태 복구 - ID: \(syncedId)")

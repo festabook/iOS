@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import ImageIO
 
 @MainActor
 final class ImageLoader: ObservableObject {
@@ -11,6 +12,58 @@ final class ImageLoader: ObservableObject {
         memoryCapacity: 50 * 1024 * 1024, // 50MB memory
         diskCapacity: 200 * 1024 * 1024   // 200MB disk
     )
+
+    nonisolated static func decodeImage(from data: Data) -> UIImage? {
+        if let gifImage = decodeGIFImage(from: data) {
+            return gifImage
+        }
+
+        if let image = UIImage(data: data) {
+            return image
+        }
+
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+            return nil
+        }
+
+        return UIImage(cgImage: cgImage)
+    }
+
+    nonisolated private static func decodeGIFImage(from data: Data) -> UIImage? {
+        guard data.count >= 4,
+              data.starts(with: [0x47, 0x49, 0x46, 0x38]), // "GIF8"
+              let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+            return nil
+        }
+
+        let frameCount = CGImageSourceGetCount(source)
+        guard frameCount > 1 else { return nil }
+
+        var frames: [UIImage] = []
+        var duration: TimeInterval = 0
+
+        for index in 0..<frameCount {
+            guard let cgImage = CGImageSourceCreateImageAtIndex(source, index, nil) else { continue }
+            duration += gifFrameDuration(from: source, at: index)
+            frames.append(UIImage(cgImage: cgImage))
+        }
+
+        guard !frames.isEmpty else { return nil }
+        return UIImage.animatedImage(with: frames, duration: max(duration, 0.1))
+    }
+
+    nonisolated private static func gifFrameDuration(from source: CGImageSource, at index: Int) -> TimeInterval {
+        guard let properties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any],
+              let gif = properties[kCGImagePropertyGIFDictionary] as? [CFString: Any] else {
+            return 0.1
+        }
+
+        let unclamped = gif[kCGImagePropertyGIFUnclampedDelayTime] as? TimeInterval
+        let clamped = gif[kCGImagePropertyGIFDelayTime] as? TimeInterval
+        let value = unclamped ?? clamped ?? 0.1
+        return value < 0.011 ? 0.1 : value
+    }
 
     private let session: URLSession
     private var currentURL: URL?
@@ -84,7 +137,7 @@ final class ImageLoader: ObservableObject {
                     return
                 }
 
-                guard let loadedImage = UIImage(data: data) else {
+                guard let loadedImage = Self.decodeImage(from: data) else {
                     print("[ImageLoader] Failed to create image from data for: \(url)")
                     await MainActor.run {
                         guard self.currentLoadToken == loadToken else { return }

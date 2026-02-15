@@ -23,9 +23,11 @@ final class LostItemGuideRepository: LostItemGuideRepositoryProtocol {
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        // festival 헤더 추가 (APIClient와 동일한 방식)
+        // festivalId 헤더 추가 (APIClient와 동일한 방식)
         let storedFestivalId = UserDefaults.standard.object(forKey: "currentFestivalId") as? Int
         if let storedFestivalId, storedFestivalId > 0 {
+            request.setValue("\(storedFestivalId)", forHTTPHeaderField: "festivalId")
+            // 서버 롤아웃 과도기 호환: legacy festival 헤더도 함께 전송
             request.setValue("\(storedFestivalId)", forHTTPHeaderField: "festival")
         }
 

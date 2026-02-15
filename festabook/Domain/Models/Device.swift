@@ -26,8 +26,26 @@ struct FestivalNotificationResponse: Codable {
     let festivalNotificationId: Int
 }
 
-struct FestivalNotificationSubscription: Codable {
+struct FestivalNotificationSubscription: Decodable {
     let festivalNotificationId: Int
-    let universityName: String
+    let organizationName: String
     let festivalName: String
+
+    private enum CodingKeys: String, CodingKey {
+        case festivalNotificationId
+        case organizationName
+        case universityName
+        case festivalName
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        festivalNotificationId = try container.decode(Int.self, forKey: .festivalNotificationId)
+        festivalName = try container.decode(String.self, forKey: .festivalName)
+        if let decodedOrganizationName = try? container.decode(String.self, forKey: .organizationName) {
+            organizationName = decodedOrganizationName
+        } else {
+            organizationName = try container.decode(String.self, forKey: .universityName)
+        }
+    }
 }

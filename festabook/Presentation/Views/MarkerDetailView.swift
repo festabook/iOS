@@ -79,11 +79,19 @@ struct MarkerDetailModal: View {
 
                 // Right image (96×96)
                 if let imageUrl = place.imageUrl, let url = URL(string: imageUrl) {
-                    AsyncImage(url: url) { image in
+                    CachedAsyncImage(url: url.absoluteString) { image in
                         image
                             .resizable()
                             .scaledToFill()
                     } placeholder: {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 24))
+                            )
+                    } errorView: {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.gray.opacity(0.3))
                             .overlay(
@@ -156,11 +164,20 @@ struct DetailedMarkerCard: View {
         VStack(alignment: .leading, spacing: 16) {
             // Image
             if let imageUrl = place.imageUrl, let url = URL(string: imageUrl) {
-                AsyncImage(url: url) { image in
+                CachedAsyncImage(url: url.absoluteString) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(height: 200)
+                        .overlay(
+                            Image(systemName: "photo")
+                                .foregroundColor(.gray)
+                                .font(.system(size: 40))
+                        )
+                } errorView: {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(Color.gray.opacity(0.3))
                         .frame(height: 200)

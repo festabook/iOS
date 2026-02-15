@@ -2,24 +2,42 @@
 import Foundation
 
 enum BuildConfig {
-    /// 기본 베이스 URL
-    private static let defaultBaseURL = "https://festabook.app"
+    /// 기본 웹 베이스 URL
+    private static let defaultDevImageBaseURL = "https://dev.festabook.app"
+    private static let defaultProdImageBaseURL = "https://festabook.app"
+    private static let defaultDevAPIBaseURL = "https://dev.api.festabook.app"
+    private static let defaultProdAPIBaseURL = "https://api.festabook.app"
     
     static var apiBaseURL: URL {
-        let urlString = string(for: "API_BASE_URL")
-        guard !urlString.isEmpty else {
-            // 폴백 URL 사용
-            return URL(string: defaultBaseURL)!
-        }
-        return URL(string: urlString)!
+        let configured = string(for: "API_BASE_URL")
+        let rawURLString = configured.isEmpty ? defaultAPIBaseURL : configured
+        let normalizedURLString = normalizeAPIBaseURL(rawURLString)
+        return URL(string: normalizedURLString)!
     }
 
     /// 베이스 URL (이미지 경로 등에 사용)
     static var baseURL: String {
-        return defaultBaseURL
+        let configured = string(for: "IMAGE_BASE_URL")
+        return configured.isEmpty ? defaultImageBaseURL : configured
     }
 
     static var naverMapClientId: String { string(for: "NAVER_MAP_CLIENT_ID") }
+
+    private static var defaultAPIBaseURL: String {
+        #if DEBUG
+        return defaultDevAPIBaseURL
+        #else
+        return defaultProdAPIBaseURL
+        #endif
+    }
+
+    private static var defaultImageBaseURL: String {
+        #if DEBUG
+        return defaultDevImageBaseURL
+        #else
+        return defaultProdImageBaseURL
+        #endif
+    }
 
     private static func string(for key: String) -> String {
         // 여러 방법으로 시도
@@ -33,6 +51,19 @@ enum BuildConfig {
         }
         
         return ""
+    }
+
+    private static func normalizeAPIBaseURL(_ value: String) -> String {
+        var normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if normalized.hasSuffix("/api/") {
+            normalized.removeLast(5)
+        } else if normalized.hasSuffix("/api") {
+            normalized.removeLast(4)
+        }
+        if normalized.hasSuffix("/") {
+            normalized.removeLast()
+        }
+        return normalized
     }
 }
 

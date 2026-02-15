@@ -149,11 +149,19 @@ struct ThumbnailView: View {
 
     var body: some View {
         if let resolved = ImageURLResolver.resolve(imageUrl), let url = URL(string: resolved) {
-            AsyncImage(url: url) { image in
+            CachedAsyncImage(url: url.absoluteString) { image in
                 image
                     .resizable()
                     .scaledToFill()
             } placeholder: {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.gray.opacity(0.3))
+                    .overlay(
+                        Image(systemName: "photo")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 20))
+                    )
+            } errorView: {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.gray.opacity(0.3))
                     .overlay(

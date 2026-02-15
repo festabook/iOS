@@ -37,8 +37,7 @@ final class LostItemAPI: LostItemServicing {
     func fetchLostItems() async throws -> [LostItem] {
         do {
             print("[LostItemAPI] Fetching lost items...")
-            // 서버 스펙: GET /lost-items, 헤더 festival: {id}
-            // Base URL이 이미 "/api"를 포함하므로 여기서는 "/lost-items"만 전달
+            // 서버 스펙: GET /lost-items, 헤더 festivalId: {id}
             let allItems: [LostItem] = try await apiClient.get(Endpoints.News.lostItems)
             print("[LostItemAPI] Successfully fetched \(allItems.count) total lost items")
 

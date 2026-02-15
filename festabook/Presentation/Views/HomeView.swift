@@ -1084,7 +1084,7 @@ private final class CarouselImageLoader {
         request.cachePolicy = .returnCacheDataElseLoad
 
         if let cachedResponse = session.configuration.urlCache?.cachedResponse(for: request),
-           let image = UIImage(data: cachedResponse.data) {
+           let image = ImageLoader.decodeImage(from: cachedResponse.data) {
             DispatchQueue.main.async {
                 completion(image)
             }
@@ -1095,7 +1095,7 @@ private final class CarouselImageLoader {
 
         let task = session.dataTask(with: request) { [weak self] data, response, _ in
             var image: UIImage? = nil
-            if let data, let fetchedImage = UIImage(data: data) {
+            if let data, let fetchedImage = ImageLoader.decodeImage(from: data) {
                 image = fetchedImage
                 if let response {
                     let cachedResponse = CachedURLResponse(response: response, data: data)
@@ -1142,19 +1142,27 @@ struct AndroidStyleFestivalCard: View {
             // 실제 S3 이미지 URL 구성 및 로딩 (API와 같은 도메인 사용)
             let imageURL = ImageURLResolver.resolve(image.imageUrl) ?? ""
             
-            AsyncImage(url: URL(string: imageURL)) { phase in
-                switch phase {
-                case .success(let loadedImage):
+            if !imageURL.isEmpty {
+                CachedAsyncImage(url: imageURL) { loadedImage in
                     loadedImage
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: posterWidth, height: posterHeight)
                         .clipped()
-                        .onAppear {
-                            print("[AndroidStyleFestivalCard] 이미지 로딩 성공: \(imageURL)")
-                        }
-                case .failure(let error):
-                    // 이미지 로딩 실패 시 빈 상태 표시
+                } placeholder: {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.1))
+                        .frame(width: posterWidth, height: posterHeight)
+                        .overlay(
+                            VStack(spacing: 8) {
+                                ProgressView()
+                                    .tint(.blue)
+                                Text("로딩 중...")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.gray)
+                            }
+                        )
+                } errorView: {
                     Rectangle()
                         .fill(Color.gray.opacity(0.1))
                         .frame(width: posterWidth, height: posterHeight)
@@ -1169,41 +1177,21 @@ struct AndroidStyleFestivalCard: View {
                                     .multilineTextAlignment(.center)
                             }
                         )
-                        .onAppear {
-                            print("[AndroidStyleFestivalCard] 이미지 로딩 실패: \(imageURL), 에러: \(error)")
-                        }
-                case .empty:
-                    // 로딩 중
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.1))
-                        .frame(width: posterWidth, height: posterHeight)
-                        .overlay(
-                            VStack(spacing: 8) {
-                                ProgressView()
-                                    .tint(.blue)
-                                Text("로딩 중...")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.gray)
-                            }
-                        )
-                        .onAppear {
-                            print("[AndroidStyleFestivalCard] 이미지 로딩 시작: \(imageURL)")
-                        }
-                @unknown default:
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.1))
-                        .frame(width: posterWidth, height: posterHeight)
-                        .overlay(
-                            VStack(spacing: 8) {
-                                Image(systemName: "exclamationmark.triangle")
-                                    .font(.system(size: 32))
-                                    .foregroundColor(.gray.opacity(0.5))
-                                Text("알 수 없는 오류")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.gray)
-                            }
-                        )
                 }
+            } else {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.1))
+                    .frame(width: posterWidth, height: posterHeight)
+                    .overlay(
+                        VStack(spacing: 8) {
+                            Image(systemName: "photo")
+                                .font(.system(size: 32))
+                                .foregroundColor(.gray.opacity(0.5))
+                            Text("이미지가 없습니다")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                        }
+                    )
             }
 
         }
@@ -1449,15 +1437,14 @@ struct CircularArtistProfile: View {
             // 원형 프로필 이미지
             let artistImageURL = ImageURLResolver.resolve(lineup.imageUrl) ?? ""
 
-            AsyncImage(url: artistImageURL.isEmpty ? nil : URL(string: artistImageURL)) { phase in
-                switch phase {
-                case .success(let image):
+            if !artistImageURL.isEmpty {
+                CachedAsyncImage(url: artistImageURL) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: profileSize, height: profileSize)
                         .clipShape(Circle())
-                case .failure(_), .empty:
+                } placeholder: {
                     Circle()
                         .fill(Color.gray.opacity(0.2))
                         .frame(width: profileSize, height: profileSize)
@@ -1466,11 +1453,25 @@ struct CircularArtistProfile: View {
                                 .font(.system(size: 20))
                                 .foregroundColor(.gray.opacity(0.6))
                         )
-                @unknown default:
+                } errorView: {
                     Circle()
                         .fill(Color.gray.opacity(0.2))
                         .frame(width: profileSize, height: profileSize)
+                        .overlay(
+                            Image(systemName: "music.note")
+                                .font(.system(size: 20))
+                                .foregroundColor(.gray.opacity(0.6))
+                        )
                 }
+            } else {
+                Circle()
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: profileSize, height: profileSize)
+                    .overlay(
+                        Image(systemName: "music.note")
+                            .font(.system(size: 20))
+                            .foregroundColor(.gray.opacity(0.6))
+                    )
             }
 
             // 아티스트 이름 (한 줄만, 말줄임 처리)
