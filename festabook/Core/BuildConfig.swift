@@ -3,10 +3,8 @@ import Foundation
 
 enum BuildConfig {
     /// 기본 웹 베이스 URL
-    private static let defaultDevImageBaseURL = "https://dev.festabook.app"
-    private static let defaultProdImageBaseURL = "https://festabook.app"
-    private static let defaultDevAPIBaseURL = "https://dev.api.festabook.app"
-    private static let defaultProdAPIBaseURL = "https://api.festabook.app"
+    private static let defaultImageBaseURL = "https://festabook.app"
+    private static let defaultAPIBaseURL = "https://api.festabook.app"
     
     static var apiBaseURL: URL {
         let configured = string(for: "API_BASE_URL")
@@ -22,22 +20,6 @@ enum BuildConfig {
     }
 
     static var naverMapClientId: String { string(for: "NAVER_MAP_CLIENT_ID") }
-
-    private static var defaultAPIBaseURL: String {
-        #if DEBUG
-        return defaultDevAPIBaseURL
-        #else
-        return defaultProdAPIBaseURL
-        #endif
-    }
-
-    private static var defaultImageBaseURL: String {
-        #if DEBUG
-        return defaultDevImageBaseURL
-        #else
-        return defaultProdImageBaseURL
-        #endif
-    }
 
     private static func string(for key: String) -> String {
         // 여러 방법으로 시도
