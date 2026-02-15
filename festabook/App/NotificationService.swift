@@ -116,9 +116,16 @@ class NotificationService: ObservableObject {
             let subscriptions: [FestivalNotificationSubscription] = try await APIClient.shared.getNotification(endpoint: endpoint)
 
             await MainActor.run {
-                var updated: [Int: Int] = [:]
+                var updated: [Int: Int] = Dictionary(
+                    uniqueKeysWithValues: subscriptions.compactMap { subscription in
+                        guard let festivalId = subscription.festivalId else { return nil }
+                        return (festivalId, subscription.festivalNotificationId)
+                    }
+                )
 
+                // 구버전 응답 호환(festivalId 미포함): 현재 포커스 축제 1건만 organizationName 기반 복구
                 if let focusFestivalId,
+                   updated[focusFestivalId] == nil,
                    let focusOrganizationName,
                    let matched = subscriptions.first(where: { $0.organizationName == focusOrganizationName }) {
                     updated[focusFestivalId] = matched.festivalNotificationId
@@ -414,8 +421,21 @@ class NotificationService: ObservableObject {
 
     // MARK: - 축제 알림 구독 취소
     func unsubscribeFromFestivalNotifications(festivalId: Int) async throws {
-        guard let festivalNotificationId = festivalNotificationIds[festivalId] else {
-            throw NotificationError.notificationNotSubscribed
+        var targetFestivalNotificationId = festivalNotificationIds[festivalId]
+        if targetFestivalNotificationId == nil {
+            await synchronizeSubscriptionsWithServer(focusFestivalId: festivalId)
+            targetFestivalNotificationId = await MainActor.run { festivalNotificationIds[festivalId] }
+        }
+
+        guard let festivalNotificationId = targetFestivalNotificationId else {
+            await MainActor.run {
+                removeFestivalSubscription(festivalId: festivalId)
+                if currentObservedFestivalId == festivalId {
+                    isNotificationEnabled = false
+                }
+            }
+            print("[NotificationService] ⚠️ 구독 ID 없음 - 이미 미구독 상태로 간주")
+            return
         }
 
         if let task = unsubscribeTasks[festivalId] {
