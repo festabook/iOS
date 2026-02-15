@@ -269,19 +269,19 @@ struct HomeView: View {
     // MARK: - 알림 모달 관련 함수들
 
     private func checkAndShowNotificationModal() {
-        // 대학 홈 화면 진입 시 모달 표시 (축제 정보가 있을 때)
-        guard let festivalId = festivalDetail?.festivalId else { return }
+        // 축제 진입 시 모달 표시 (상세 로딩 실패와 무관하게 현재 선택 축제 기준)
+        guard let festivalId = appState.currentFestivalId ?? festivalDetail?.festivalId else { return }
 
-        // 해당 학교에 대해 모달을 아직 보여주지 않았다면 표시
+        // 해당 축제에 대해 모달을 아직 보여주지 않았다면 표시
         if notificationService.shouldShowNotificationModal(for: festivalId) {
             showNotificationModal = true
-            print("[HomeView] 🎪 학교 \(festivalId) 진입 시 알림 모달 표시")
+            print("[HomeView] 🎪 축제 \(festivalId) 진입 시 알림 모달 표시")
         }
     }
 
     private func markNotificationModalShown(for festivalId: Int) {
         notificationService.markNotificationModalShown(for: festivalId)
-        print("[HomeView] ✅ 학교 \(festivalId) 알림 모달 표시 완료로 기록")
+        print("[HomeView] ✅ 축제 \(festivalId) 알림 모달 표시 완료로 기록")
     }
 
     private func handleNotificationPermission(granted: Bool, festivalId: Int) async {

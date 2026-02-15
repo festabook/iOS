@@ -496,7 +496,7 @@ class NotificationService: ObservableObject {
         }
     }
     
-    // MARK: - 학교별 모달 표시 여부 관리
+    // MARK: - 축제별 모달 표시 여부 관리
     func shouldShowNotificationModal(for festivalId: Int) -> Bool {
         let key = notificationModalShownKey + "\(festivalId)"
         return !userDefaults.bool(forKey: key)
@@ -505,7 +505,7 @@ class NotificationService: ObservableObject {
     func markNotificationModalShown(for festivalId: Int) {
         let key = notificationModalShownKey + "\(festivalId)"
         userDefaults.set(true, forKey: key)
-        print("[NotificationService] 학교 \(festivalId) 모달 표시 완료로 기록")
+        print("[NotificationService] 축제 \(festivalId) 모달 표시 완료로 기록")
     }
 }
 
