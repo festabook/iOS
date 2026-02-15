@@ -40,14 +40,14 @@ struct SettingsView: View {
 
                         // 알림 설정 항목들
                         VStack(spacing: 0) {
-                            // 현재 접속 중인 대학 - {universityName}
+                            // 현재 접속 중인 축제 - {festivalName}
                             HStack(alignment: .center, spacing: 12) {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("현재 접속 중인 대학")
+                                    Text("현재 접속 중인 축제")
                                         .font(.system(size: 17, weight: .regular))
                                         .foregroundColor(.primary)
                                     
-                                    Text(appState.currentUniversityName)
+                                    Text(appState.selectedFestival?.festivalName ?? "축제 정보가 없습니다")
                                         .font(.system(size: 15, weight: .regular))
                                         .foregroundColor(.secondary)
                                         .lineLimit(nil) // 여러 줄 허용

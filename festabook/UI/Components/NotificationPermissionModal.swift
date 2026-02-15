@@ -20,15 +20,10 @@ struct NotificationPermissionModal: View {
                     .font(.system(size: 32))
                     .foregroundColor(.black)
                 
-                // 제목 (굵은 텍스트) - 강제 줄바꿈
-                VStack(spacing: 2) {
-                    Text("우리 학교 축제의")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.black)
-                    Text("최신 정보를 놓치지 마세요!")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.black)
-                }
+                // 제목 (굵은 텍스트)
+                Text("해당 축제의 알림을 받아보시겠습니까?")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.black)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 8)
                 
